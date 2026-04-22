@@ -22,6 +22,13 @@ app.use(cors({
     credentials: true
 }))
 
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        version: "2026-04-22-2"
+    })
+})
+
 /* require all the routes here */
 const authRouter = require("./routes/auth.routes")
 const interviewRouter = require("./routes/interview.routes")
@@ -31,6 +38,19 @@ const interviewRouter = require("./routes/interview.routes")
 app.use("/api/auth", authRouter)
 app.use("/api/interview", interviewRouter)
 
+app.use((error, req, res, next) => {
+    console.error(error)
+
+    if (error.message === "Not allowed by CORS") {
+        return res.status(403).json({
+            message: "This frontend URL is not allowed by backend CORS. Add it to FRONTEND_URLS on the backend deployment."
+        })
+    }
+
+    res.status(error.status || 500).json({
+        message: error.message || "Server error."
+    })
+})
 
 
 module.exports = app

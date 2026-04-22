@@ -2,7 +2,14 @@ const pdfParse = require("pdf-parse")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interviewReport.model")
 
+function getErrorStatus(error) {
+    return error.status || error.statusCode || error.response?.status
+}
 
+function isForbiddenError(error) {
+    const status = getErrorStatus(error)
+    return status === 403 || String(status) === "403" || String(error.message || "").includes("403")
+}
 
 
 /**
@@ -38,10 +45,11 @@ async function generateInterViewReportController(req, res) {
         })
     } catch (error) {
         console.error("Failed to generate interview report:", error)
-        return res.status(error.status || 502).json({
-            message: error.status === 403
+        const status = getErrorStatus(error)
+        return res.status(Number(status) || 502).json({
+            message: isForbiddenError(error)
                 ? "AI report generation was rejected by the AI provider. Please check the backend API key, model access, and billing/project permissions."
-                : "AI report generation failed. Please try again."
+                : `AI report generation failed${status ? ` with status ${status}` : ""}. Please try again.`
         })
     }
 

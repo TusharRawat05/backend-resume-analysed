@@ -6,6 +6,7 @@ const puppeteer = require("puppeteer")
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
 })
+const model = process.env.GOOGLE_GENAI_MODEL || "gemini-2.5-flash"
 
 
 const interviewReportSchema = z.object({
@@ -42,7 +43,7 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 `
 
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model,
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -96,7 +97,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                     `
 
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model,
         contents: prompt,
         config: {
             responseMimeType: "application/json",
