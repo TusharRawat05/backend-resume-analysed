@@ -11,6 +11,10 @@ function isForbiddenError(error) {
     return status === 403 || String(status) === "403" || String(error.message || "").includes("403")
 }
 
+function getPublicErrorDetail(error) {
+    return String(error.message || "Unknown error").split("\n")[0]
+}
+
 
 /**
  * @description Controller to generate interview report based on user self description, resume and job description.
@@ -132,10 +136,11 @@ async function generateResumePdfController(req, res) {
         pdfBuffer = await generateResumePdf({ resume, jobDescription, selfDescription })
     } catch (error) {
         console.error("Failed to generate resume PDF:", error)
+        const publicDetail = getPublicErrorDetail(error)
         return res.status(502).json({
             message: String(error.message || "").includes("Could not find Chrome")
                 ? "Resume PDF generation failed because Chrome is not available on the backend server. Redeploy the backend with Puppeteer browser installation enabled."
-                : "Resume PDF generation failed. Please try again."
+                : `Resume PDF generation failed: ${publicDetail}`
         })
     }
 

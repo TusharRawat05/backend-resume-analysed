@@ -7,6 +7,18 @@ const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
 })
 const model = process.env.GOOGLE_GENAI_MODEL || "gemini-2.5-flash"
+const puppeteerLaunchOptions = {
+    headless: "new",
+    args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+    ],
+}
+
+if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    puppeteerLaunchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH
+}
 
 
 const interviewReportSchema = z.object({
@@ -61,14 +73,7 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 async function generatePdfFromHtml(htmlContent) {
     let browser
     try {
-        browser = await puppeteer.launch({
-            headless: "new",
-            args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-            ],
-        })
+        browser = await puppeteer.launch(puppeteerLaunchOptions)
         const page = await browser.newPage();
         await page.setContent(htmlContent, { waitUntil: "networkidle0" })
 
