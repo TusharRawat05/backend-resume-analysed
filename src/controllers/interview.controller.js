@@ -117,7 +117,7 @@ async function getAllInterviewReportsController(req, res) {
 async function generateResumePdfController(req, res) {
     const { interviewReportId } = req.params
 
-    const interviewReport = await interviewReportModel.findById(interviewReportId)
+    const interviewReport = await interviewReportModel.findOne({ _id: interviewReportId, user: req.user.id })
 
     if (!interviewReport) {
         return res.status(404).json({
@@ -127,7 +127,17 @@ async function generateResumePdfController(req, res) {
 
     const { resume, jobDescription, selfDescription } = interviewReport
 
-    const pdfBuffer = await generateResumePdf({ resume, jobDescription, selfDescription })
+    let pdfBuffer
+    try {
+        pdfBuffer = await generateResumePdf({ resume, jobDescription, selfDescription })
+    } catch (error) {
+        console.error("Failed to generate resume PDF:", error)
+        return res.status(502).json({
+            message: String(error.message || "").includes("Could not find Chrome")
+                ? "Resume PDF generation failed because Chrome is not available on the backend server. Redeploy the backend with Puppeteer browser installation enabled."
+                : "Resume PDF generation failed. Please try again."
+        })
+    }
 
     res.set({
         "Content-Type": "application/pdf",
